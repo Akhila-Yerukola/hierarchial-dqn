@@ -22,7 +22,7 @@ def main():
         episode_lengths=np.zeros(12000),
         episode_rewards=np.zeros(12000))
     
-    anneal_factor = (1.0-0.1)/12000
+    anneal_factor = (1.0-0.1)/12000 
     print "Annealing factor: " + str(anneal_factor)
     for episode_thousand in range(12):
         for episode in range(1000):
@@ -38,6 +38,7 @@ def main():
                 total_external_reward = 0
                 goal_reached = False
                 while not done and not goal_reached:
+                    episode_length += 1
                     action = agent.select_move(one_hot(state), one_hot(goal), goal)[0]
                     print(str((state,action)) + "; ")
                     next_state, external_reward, done = env.step(action)
@@ -66,19 +67,24 @@ def main():
                 #Annealing 
                 agent.meta_epsilon -= anneal_factor
                 avg_success_rate = agent.goal_success[goal-1] / agent.goal_selected[goal-1]
-                
-                if(avg_success_rate == 0 or avg_success_rate == 1):
-                    agent.actor_epsilon[goal-1] -= anneal_factor
-                else:
-                    agent.actor_epsilon[goal-1] = 1 - avg_success_rate
+                print "avg_success_rate : ", avg_success_rate
+                # if(avg_success_rate < 0.9):
+                agent.actor_epsilon[goal-1] -= anneal_factor
+                # else:
+                #     agent.actor_epsilon[goal-1] = 1 - avg_success_rate
             
                 if agent.actor_epsilon[goal-1] < 0.1:
                     agent.actor_epsilon[goal-1] = 0.1
+                if agent.meta_epsilon < 0.1:
+                    agent.meta_epsilon = 0.1
                 print "meta_epsilon: " + str(agent.meta_epsilon)
                 print "actor_epsilon " + str(goal) + ": " + str(agent.actor_epsilon[goal-1])
+
+                
         print "visits", visits
     
-    plot_episode_stats(stats)
+    fig1,fig2,fig3 = plot_episode_stats(stats)
+
     plot_visited_states(visits, 12000)
 
     eps = list(range(1,13))
@@ -101,7 +107,7 @@ def main():
     plt.subplot(2, 3, 3)
     plt.plot(eps, visits[:,2]/1000)
     plt.xlabel("Episodes (*1000)")
-    plt.ylim(-0.01, 2.0)
+    plt.ylim(0.0, 1.0)
     plt.xlim(1, 12)
     plt.title("S3")
     plt.grid(True)
@@ -109,7 +115,7 @@ def main():
     plt.subplot(2, 3, 4)
     plt.plot(eps, visits[:,3]/1000)
     plt.xlabel("Episodes (*1000)")
-    plt.ylim(-0.01, 2.0)
+    plt.ylim(0.0, 1.0)
     plt.xlim(1, 12)
     plt.title("S4")
     plt.grid(True)
@@ -117,7 +123,7 @@ def main():
     plt.subplot(2, 3, 5)
     plt.plot(eps, visits[:,4]/1000)
     plt.xlabel("Episodes (*1000)")
-    plt.ylim(-0.01, 2.0)
+    plt.ylim(0, 1.0)
     plt.xlim(1, 12)
     plt.title("S5")
     plt.grid(True)
@@ -125,7 +131,7 @@ def main():
     plt.subplot(2, 3, 6)
     plt.plot(eps, visits[:,5]/1000)
     plt.xlabel("Episodes (*1000)")
-    plt.ylim(-0.01, 2.0)
+    plt.ylim(0, 1.0)
     plt.xlim(1, 12)
     plt.title("S6")
     plt.grid(True)
