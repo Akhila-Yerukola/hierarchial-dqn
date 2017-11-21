@@ -18,6 +18,7 @@ def main():
     env = StochasticMDPEnv()
     agent = Hdqn()
     visits = np.zeros((12, 6))
+    goals = np.zeros((12, 6))
     stats = plotting.EpisodeStats(
         episode_lengths=np.zeros(12000),
         episode_rewards=np.zeros(12000))
@@ -34,6 +35,7 @@ def main():
             while not done:
                 goal = agent.select_goal(one_hot(state))[0]
                 agent.goal_selected[goal-1] += 1
+                goals[episode_thousand][goal-1]+=1
                 print "\nNew Goal: "  + str(goal) + "\nState-Actions: "
                 total_external_reward = 0
                 goal_reached = False
@@ -42,6 +44,8 @@ def main():
                     action = agent.select_move(one_hot(state), one_hot(goal), goal)[0]
                     print(str((state,action)) + "; ")
                     next_state, external_reward, done = env.step(action)
+                    if external_reward==1:
+                        print "extrinsic_reward: ", goal," reward:", external_reward
                     #print "next_state, external_reward, done", next_state, external_reward, done
                     # Update statistics
                     stats.episode_rewards[episode_thousand*1000 + episode] += external_reward
@@ -83,6 +87,7 @@ def main():
                 
         print "visits", visits
     
+    print "goals", goals
     fig1,fig2,fig3 = plot_episode_stats(stats)
 
     plot_visited_states(visits, 12000)
@@ -136,8 +141,58 @@ def main():
     plt.title("S6")
     plt.grid(True)
     plt.savefig('first_run.png')
+    plt.show()  
+
+    plt.clf()
+    eps = list(range(1,13))
+    plt.subplot(2, 3, 1)
+    plt.plot(eps, goals[:,0]/1000)
+    plt.xlabel("Episodes (*1000)")
+    plt.ylim(-0.01, 2.0)
+    plt.xlim(1, 12)
+    plt.title("S1")
+    plt.grid(True)
+
+    plt.subplot(2, 3, 2)
+    plt.plot(eps, goals[:,1]/1000)
+    plt.xlabel("Episodes (*1000)")
+    plt.ylim(-0.01, 2.0)
+    plt.xlim(1, 12)
+    plt.title("S2")
+    plt.grid(True)
+
+    plt.subplot(2, 3, 3)
+    plt.plot(eps, goals[:,2]/1000)
+    plt.xlabel("Episodes (*1000)")
+    plt.ylim(0.0, 1.0)
+    plt.xlim(1, 12)
+    plt.title("S3")
+    plt.grid(True)
+
+    plt.subplot(2, 3, 4)
+    plt.plot(eps, goals[:,3]/1000)
+    plt.xlabel("Episodes (*1000)")
+    plt.ylim(0.0, 1.0)
+    plt.xlim(1, 12)
+    plt.title("S4")
+    plt.grid(True)
+
+    plt.subplot(2, 3, 5)
+    plt.plot(eps, goals[:,4]/1000)
+    plt.xlabel("Episodes (*1000)")
+    plt.ylim(0, 1.0)
+    plt.xlim(1, 12)
+    plt.title("S5")
+    plt.grid(True)
+
+    plt.subplot(2, 3, 6)
+    plt.plot(eps, goals[:,5]/1000)
+    plt.xlabel("Episodes (*1000)")
+    plt.ylim(0, 1.0)
+    plt.xlim(1, 12)
+    plt.title("S6")
+    plt.grid(True)
+    plt.savefig('first_run_goals.png')
     plt.show()
-
-
 if __name__ == "__main__":
     main()
