@@ -34,32 +34,32 @@ def main():
             done = False
             while not done:
                 goal = agent.select_goal(one_hot(state))[0]
-                agent.goal_selected[goal-1] += 1
-                goals[episode_thousand][goal-1]+=1
-                print "\nNew Goal: "  + str(goal) + "\nState-Actions: "
+                agent.goal_selected[goal] += 1
+                goals[episode_thousand][goal]+=1
+                print "\nNew Goal: "  + str(goal+1) + "\nState-Actions: "
                 total_external_reward = 0
                 goal_reached = False
                 while not done and not goal_reached:
                     episode_length += 1
-                    action = agent.select_move(one_hot(state), one_hot(goal), goal)[0]
+                    action = agent.select_move(one_hot(state), one_hot(goal+1), goal)[0]
                     print(str((state,action)) + "; ")
                     next_state, external_reward, done = env.step(action)
                     if external_reward==1:
-                        print "extrinsic_reward: ", goal," reward:", external_reward
+                        print "extrinsic_reward: ", goal+1," reward:", external_reward
                     #print "next_state, external_reward, done", next_state, external_reward, done
                     # Update statistics
                     stats.episode_rewards[episode_thousand*1000 + episode] += external_reward
                     stats.episode_lengths[episode_thousand*1000 + episode] = episode_length
 
                     visits[episode_thousand][next_state-1] += 1
-                    intrinsic_reward = agent.criticize(goal, next_state)
-                    goal_reached = next_state == goal
+                    intrinsic_reward = agent.criticize(goal+1, next_state)
+                    goal_reached = next_state == goal+1
                     if goal_reached:
-                        agent.goal_success[goal-1] += 1
+                        agent.goal_success[goal] += 1
                         print "Goal reached!! "
                     if next_state == 6:
                         print "S6 reached!! "
-                    exp = ActorExperience(one_hot(state), one_hot(goal), action, intrinsic_reward, one_hot(next_state), done)
+                    exp = ActorExperience(one_hot(state), one_hot(goal+1), action, intrinsic_reward, one_hot(next_state), done)
                     agent.store(exp, meta=False)
                     agent.update(meta=False)
                     agent.update(meta=True)
@@ -70,19 +70,19 @@ def main():
                 
                 #Annealing 
                 agent.meta_epsilon -= anneal_factor
-                avg_success_rate = agent.goal_success[goal-1] / agent.goal_selected[goal-1]
+                avg_success_rate = agent.goal_success[goal] / agent.goal_selected[goal]
                 print "avg_success_rate : ", avg_success_rate
                 # if(avg_success_rate < 0.9):
-                agent.actor_epsilon[goal-1] -= anneal_factor
+                agent.actor_epsilon[goal] -= anneal_factor
                 # else:
-                #     agent.actor_epsilon[goal-1] = 1 - avg_success_rate
+                #     agent.actor_epsilon[goal] = 1 - avg_success_rate
             
-                if agent.actor_epsilon[goal-1] < 0.1:
-                    agent.actor_epsilon[goal-1] = 0.1
+                if agent.actor_epsilon[goal] < 0.1:
+                    agent.actor_epsilon[goal] = 0.1
                 if agent.meta_epsilon < 0.1:
                     agent.meta_epsilon = 0.1
                 print "meta_epsilon: " + str(agent.meta_epsilon)
-                print "actor_epsilon " + str(goal) + ": " + str(agent.actor_epsilon[goal-1])
+                print "actor_epsilon " + str(goal + 1) + ": " + str(agent.actor_epsilon[goal])
 
                 
         print "visits", visits
@@ -144,6 +144,7 @@ def main():
     plt.show()  
 
     plt.clf()
+    
     eps = list(range(1,13))
     plt.subplot(2, 3, 1)
     plt.plot(eps, goals[:,0]/1000)

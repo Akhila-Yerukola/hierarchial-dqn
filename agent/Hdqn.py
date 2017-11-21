@@ -73,7 +73,7 @@ class Hdqn:
 	def select_move(self, state, goal, goal_value):
 		vector = np.concatenate([state, goal], axis=1)
 		#print "vector"
-		if random.random() < self.actor_epsilon[goal_value-1]:
+		if random.random() < self.actor_epsilon[goal_value]:
 			print "Exploring action"
 			return torch.IntTensor([random.randrange(2)])
 			#print "Here ------>", self.actor(Variable(torch.from_numpy(vector).float())).data.numpy()
