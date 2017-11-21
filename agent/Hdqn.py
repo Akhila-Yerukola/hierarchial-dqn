@@ -25,13 +25,26 @@ default_optimizer_spec = OptimizerSpec(
 	constructor=optim.RMSprop,
 	kwargs=dict(lr=0.00025, alpha=0.95, eps=1e-06),
 )
+loss_function = nn.MSELoss()
 
 def mse_loss(input, target):
 	return torch.sum((input - target)^2) / input.data.nelement()
 
-loss_function = nn.MSELoss()
+def meta_controller():
+	meta = neural_network(default_meta_nodes)
+	return meta
 
+def target_meta_controller():
+	meta = neural_network(default_meta_nodes)
+	return meta
 
+def actor():
+	actor = neural_network(default_nodes)
+	return actor
+
+def target_actor():
+	actor = neural_network(default_nodes)
+	return actor
 
 class Hdqn:
 
@@ -47,30 +60,15 @@ class Hdqn:
 		self.n_samples = default_n_samples
 		self.memory = []
 		self.meta_memory = []
-		self.meta_controller = self.meta_controller()
-		self.target_meta_controller = self.target_meta_controller()
-		self.actor = self.actor()
-		self.target_actor = self.target_actor()
+		self.meta_controller = meta_controller().type(torch.FloatTensor)
+		self.target_meta_controller = target_meta_controller().type(torch.FloatTensor)
+		self.actor = actor().type(torch.FloatTensor)
+		self.target_actor = target_actor().type(torch.FloatTensor)
 		self.target_tau = tau
 		self.meta_optimiser = optimizer_spec.constructor(self.meta_controller.parameters(), **optimizer_spec.kwargs)
 		self.actor_optimizer = optimizer_spec.constructor(self.actor.parameters(), **optimizer_spec.kwargs)
 
 
-	def meta_controller(self):
-		meta = neural_network(default_meta_nodes)
-		return meta
-
-	def target_meta_controller(self):
-		meta = neural_network(default_meta_nodes)
-		return meta
-
-	def actor(self):
-		actor = neural_network(default_nodes)
-		return actor
-
-	def target_actor(self):
-		actor = neural_network(default_nodes)
-		return actor
 
 	def select_move(self, state, goal, goal_value):
 		vector = np.concatenate([state, goal], axis=1)
